@@ -10,20 +10,27 @@ class AdminMiddleware
 {
     public function handle(Request $request, Closure $next): Response
     {
-        $user = $request->user(); 
+        $user = $request->user();
+
 
         if (!$user) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Unauthorized: Please log in'
-            ], 401);
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthorized: Please log in'
+                ], 401);
+            }
+            return redirect()->route('login');
         }
 
         if (!$user->is_admin) {
-            return response()->json([
-                'success' => false,
-                'message' => 'No permission: Admin access required'
-            ], 403);
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No permission: Admin access required'
+                ], 403);
+            }
+            abort(403, 'Admin access required');
         }
 
         return $next($request);

@@ -2,45 +2,46 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\CategoryRequest;
 use App\Models\Category;
-use App\Responses\ApiResponse;
+use Illuminate\Http\Request;
 
 class CategoryController extends Controller
 {
-    use ApiResponse;
-
-    // List all categories
-    public function index()
+    public function create()
     {
-        $categories = Category::all();
-        return $this->success($categories, 'Categories retrieved successfully');
+        return view('categories.create');
     }
 
-    // Create new category
-    public function store(CategoryRequest $request)
+    public function store(Request $request)
     {
-        $category = Category::create($request->validated());
-        return $this->created($category, 'Category created successfully');
+        $request->validate([
+            'name' => 'required|string|max:255|unique:categories,name',
+        ]);
+
+        Category::create($request->only('name'));
+
+        return redirect()->route('dashboard')->with('success', 'Category created!');
     }
 
-    // Show single category
-    public function show(Category $category)
+    public function edit(Category $category)
     {
-        return $this->success($category, 'Category retrieved successfully');
+        return view('categories.edit', compact('category'));
     }
 
-    // Update category
-    public function update(CategoryRequest $request, Category $category)
+    public function update(Request $request, Category $category)
     {
-        $category->update($request->validated());
-        return $this->success($category, 'Category updated successfully');
+        $request->validate([
+            'name' => 'required|string|max:255|unique:categories,name,' . $category->id,
+        ]);
+
+        $category->update($request->only('name'));
+
+        return redirect()->route('dashboard')->with('success', 'Category updated!');
     }
 
-    // Delete category
     public function destroy(Category $category)
     {
         $category->delete();
-        return $this->deleted('Category deleted successfully');
+        return back()->with('success', 'Category deleted!');
     }
 }
